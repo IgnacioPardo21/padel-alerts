@@ -81,7 +81,7 @@ def detect_matches():
         if pair[0] in text and pair[1] in text:
             detected.append(pair)
 
-    return detected  # devuelve lista de todas las parejas detectadas
+    return detected  # devuelve lista de todas las parejas 
 
 
 state = load_state()
