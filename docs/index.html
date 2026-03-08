@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Partidos Premier Padel</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #f0f2f5; color: #222; padding: 20px; }
+  h1 { color: #1a73e8; }
+  ul { list-style: none; padding: 0; }
+  li { background: #fff; padding: 15px; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);}
+</style>
+</head>
+<body>
+<h1>🎾 Partidos detectados hoy</h1>
+<ul id="matches">
+  <li>Cargando partidos...</li>
+</ul>
+
+<script>
+async function loadMatches() {
+    try {
+        const response = await fetch('matches.json');
+        const data = await response.json();
+        const ul = document.getElementById('matches');
+        ul.innerHTML = '';
+        if(data.length === 0) {
+            ul.innerHTML = '<li>No hay partidos detectados</li>';
+        } else {
+            data.forEach(pair => {
+                const li = document.createElement('li');
+                li.textContent = pair;
+                ul.appendChild(li);
+            });
+        }
+    } catch(err) {
+        console.error(err);
+    }
+}
+
+// Cargar al iniciar
+loadMatches();
+
+// Actualizar cada 1 minuto
+setInterval(loadMatches, 60000);
+</script>
+</body>
+</html>
