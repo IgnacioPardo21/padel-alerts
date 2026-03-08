@@ -4,11 +4,11 @@ import smtplib
 from email.mime.text import MIMEText
 import os
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 
 URL = "https://www.premierpadel.com"
 
-PLAYERS = [
+WATCH_PLAYERS = [
     "coello",
     "tapia",
     "galan",
@@ -51,40 +51,40 @@ def save_state(state):
         json.dump(state,f)
 
 
-response = requests.get(URL)
+def find_match():
 
-soup = BeautifulSoup(response.text,"html.parser")
+    r = requests.get(URL)
+    soup = BeautifulSoup(r.text,"html.parser")
 
-text = soup.get_text().lower()
+    text = soup.get_text().lower()
+
+    for p in WATCH_PLAYERS:
+        if p in text:
+            return p
+
+    return None
+
 
 state = load_state()
 
-match_detected = False
+player = find_match()
 
-for player in PLAYERS:
+now = datetime.utcnow()
 
-    if player in text:
+if player:
 
-        match_detected = True
+    if state.get("status") != "playing":
 
-        if state.get("status") != "playing":
+        send_email(f"🟢 Empieza partido de {player}")
 
-            send_email(
-                f"🟢 Empieza partido de Premier Padel con {player}"
-            )
+        state["status"] = "playing"
+        state["last_player"] = player
 
-            state["status"] = "playing"
-
-        break
-
-
-if not match_detected:
+else:
 
     if state.get("status") == "playing":
 
-        send_email(
-            "🏁 El partido ha terminado"
-        )
+        send_email("🏁 El partido ha terminado")
 
         state["status"] = "finished"
 
