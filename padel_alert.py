@@ -97,6 +97,9 @@ if pair:
 
     pair_name = f"{pair[0]} / {pair[1]}"
 
+    # Guardar siempre el partido detectado
+    save_match(pair)
+
     if state.get("match_detected") != pair_name:
 
         state["match_detected"] = pair_name
