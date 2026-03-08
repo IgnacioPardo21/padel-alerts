@@ -18,6 +18,7 @@ PASSWORD = os.environ["EMAIL_PASS"]
 DEST = os.environ["EMAIL_DEST"]
 
 STATE_FILE = "alert_state.json"
+MATCH_FILE = "matches.json"
 
 
 def send_email(message):
@@ -49,6 +50,23 @@ def save_state(state):
         json.dump(state,f)
 
 
+def save_match(pair):
+
+    try:
+        with open(MATCH_FILE) as f:
+            data = json.load(f)
+    except:
+        data = []
+
+    pair_name = f"{pair[0]} / {pair[1]}"
+
+    if pair_name not in data:
+        data.append(pair_name)
+
+    with open(MATCH_FILE,"w") as f:
+        json.dump(data,f)
+
+
 def detect_match():
 
     r = requests.get(URL)
@@ -78,6 +96,8 @@ if pair:
         state["match_detected"] = pair_name
         state["detect_time"] = now.isoformat()
         state["pre_alert"] = False
+
+        save_match(pair)
 
     else:
 
