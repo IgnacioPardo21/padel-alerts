@@ -4,15 +4,12 @@ import smtplib
 from email.mime.text import MIMEText
 import os
 import json
-from datetime import datetime, timedelta
 
 URL = "https://www.premierpadel.com"
 
-PLAYERS = [
-    "coello",
-    "tapia",
-    "galan",
-    "chingotto"
+WATCH_PAIRS = [
+    ["coello", "tapia"],
+    ["galan", "chingotto"]
 ]
 
 EMAIL = os.environ["EMAIL_USER"]
@@ -38,11 +35,11 @@ def send_email(message):
 
 def load_state():
 
-    if not os.path.exists(STATE_FILE):
+    try:
+        with open(STATE_FILE) as f:
+            return json.load(f)
+    except:
         return {}
-
-    with open(STATE_FILE,"r") as f:
-        return json.load(f)
 
 
 def save_state(state):
@@ -51,40 +48,40 @@ def save_state(state):
         json.dump(state,f)
 
 
-def check_matches():
+def detect_match():
 
     r = requests.get(URL)
     soup = BeautifulSoup(r.text,"html.parser")
 
     text = soup.get_text().lower()
 
-    for player in PLAYERS:
+    for pair in WATCH_PAIRS:
 
-        if player in text:
-            return player
+        if pair[0] in text and pair[1] in text:
+            return pair
 
     return None
 
 
 state = load_state()
 
-player = check_matches()
+pair = detect_match()
 
-now = datetime.utcnow()
+if pair:
 
-if player:
+    pair_name = f"{pair[0]} / {pair[1]}"
 
-    if state.get("alert_sent") != True:
+    if state.get("last_alert") != pair_name:
 
         send_email(
-            f"🎾 Partido detectado de {player}. Posible inicio pronto."
+            f"🎾 Detectado partido de {pair_name} en Premier Padel"
         )
 
-        state["alert_sent"] = True
+        state["last_alert"] = pair_name
 
 else:
 
-    state["alert_sent"] = False
+    state["last_alert"] = None
 
 
 save_state(state)
