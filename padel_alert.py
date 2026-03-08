@@ -9,8 +9,8 @@ from datetime import datetime, timedelta
 URL = "https://www.premierpadel.com"
 
 WATCH_PAIRS = [
-    ["coello","tapia"],
-    ["galan","chingotto"]
+    ["Coello","Tapia"],
+    ["Galán","Chingotto"]
 ]
 
 EMAIL = os.environ["EMAIL_USER"]
