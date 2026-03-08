@@ -4,12 +4,13 @@ import smtplib
 from email.mime.text import MIMEText
 import os
 import json
+from datetime import datetime, timedelta
 
 URL = "https://www.premierpadel.com"
 
 WATCH_PAIRS = [
-    ["coello", "tapia"],
-    ["galan", "chingotto"]
+    ["coello","tapia"],
+    ["galan","chingotto"]
 ]
 
 EMAIL = os.environ["EMAIL_USER"]
@@ -56,7 +57,6 @@ def detect_match():
     text = soup.get_text().lower()
 
     for pair in WATCH_PAIRS:
-
         if pair[0] in text and pair[1] in text:
             return pair
 
@@ -67,21 +67,39 @@ state = load_state()
 
 pair = detect_match()
 
+now = datetime.utcnow()
+
 if pair:
 
     pair_name = f"{pair[0]} / {pair[1]}"
 
-    if state.get("last_alert") != pair_name:
+    if state.get("match_detected") != pair_name:
 
-        send_email(
-            f"🎾 Detectado partido de {pair_name} en Premier Padel"
-        )
+        state["match_detected"] = pair_name
+        state["detect_time"] = now.isoformat()
+        state["pre_alert"] = False
 
-        state["last_alert"] = pair_name
+    else:
+
+        detect_time = datetime.fromisoformat(state["detect_time"])
+
+        if not state.get("pre_alert") and now - detect_time > timedelta(minutes=10):
+
+            send_email(
+                f"🎾 En breve empieza partido de {pair_name}"
+            )
+
+            state["pre_alert"] = True
 
 else:
 
-    state["last_alert"] = None
+    if state.get("match_detected"):
+
+        send_email(
+            f"🏁 Ha terminado el partido de {state['match_detected']}"
+        )
+
+        state = {}
 
 
 save_state(state)
