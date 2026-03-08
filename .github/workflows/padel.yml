@@ -35,9 +35,19 @@ jobs:
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "actions@github.com"
-          git checkout main
+
+          # Ignorar alert_state.json y otros archivos que no queremos versionar
+          git update-index --assume-unchanged alert_state.json || true
+
+          # Añadir solo matches.json
           git add docs/matches.json
+
+          # Hacer commit solo si hay cambios
           git diff --cached --quiet || git commit -m "Actualizar matches.json automáticamente"
+
+          # Traer últimos cambios del remoto y rebase
           git fetch origin main
-          git reset --soft origin/main
+          git rebase origin/main
+
+          # Push seguro
           git push origin main
