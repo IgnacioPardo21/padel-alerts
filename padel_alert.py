@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 
 URL = "https://www.premierpadel.com"
 
-WATCH_PLAYERS = [
+PLAYERS = [
     "coello",
     "tapia",
     "galan",
@@ -19,7 +19,7 @@ EMAIL = os.environ["EMAIL_USER"]
 PASSWORD = os.environ["EMAIL_PASS"]
 DEST = os.environ["EMAIL_DEST"]
 
-STATE_FILE = "match_state.json"
+STATE_FILE = "alert_state.json"
 
 
 def send_email(message):
@@ -51,42 +51,40 @@ def save_state(state):
         json.dump(state,f)
 
 
-def find_match():
+def check_matches():
 
     r = requests.get(URL)
     soup = BeautifulSoup(r.text,"html.parser")
 
     text = soup.get_text().lower()
 
-    for p in WATCH_PLAYERS:
-        if p in text:
-            return p
+    for player in PLAYERS:
+
+        if player in text:
+            return player
 
     return None
 
 
 state = load_state()
 
-player = find_match()
+player = check_matches()
 
 now = datetime.utcnow()
 
 if player:
 
-    if state.get("status") != "playing":
+    if state.get("alert_sent") != True:
 
-        send_email(f"🟢 Empieza partido de {player}")
+        send_email(
+            f"🎾 Partido detectado de {player}. Posible inicio pronto."
+        )
 
-        state["status"] = "playing"
-        state["last_player"] = player
+        state["alert_sent"] = True
 
 else:
 
-    if state.get("status") == "playing":
-
-        send_email("🏁 El partido ha terminado")
-
-        state["status"] = "finished"
+    state["alert_sent"] = False
 
 
 save_state(state)
