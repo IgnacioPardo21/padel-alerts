@@ -9,8 +9,8 @@ from datetime import datetime, timedelta
 URL = "https://www.premierpadel.com"
 
 WATCH_PAIRS = [
-    ["Coello","Tapia"],
-    ["Galán","Chingotto"]
+    ["coello","tapia"],
+    ["galan","chingotto"]
 ]
 
 EMAIL = os.environ["EMAIL_USER"]
@@ -22,13 +22,10 @@ MATCH_FILE = "docs/matches.json"
 
 
 def send_email(message):
-
     msg = MIMEText(message)
-
     msg["Subject"] = "Alerta Premier Padel"
     msg["From"] = EMAIL
     msg["To"] = DEST
-
     server = smtplib.SMTP_SSL("smtp.gmail.com",465)
     server.login(EMAIL,PASSWORD)
     server.sendmail(EMAIL,DEST,msg.as_string())
@@ -36,7 +33,6 @@ def send_email(message):
 
 
 def load_state():
-
     try:
         with open(STATE_FILE) as f:
             return json.load(f)
@@ -45,13 +41,13 @@ def load_state():
 
 
 def save_state(state):
-
     with open(STATE_FILE,"w") as f:
         json.dump(state,f)
 
 
 def save_match(pair):
     today = datetime.utcnow().date().isoformat()
+    now_time = datetime.utcnow().strftime("%H:%M")  # hora aproximada
     pair_name = f"{pair[0]} / {pair[1]}"
 
     # Cargar archivo
@@ -65,7 +61,8 @@ def save_match(pair):
     if not any(d['pair'] == pair_name and d['date'] == today for d in data):
         data.append({
             "pair": pair_name,
-            "date": today
+            "date": today,
+            "time": now_time
         })
 
     # Guardar archivo actualizado
@@ -73,62 +70,44 @@ def save_match(pair):
         json.dump(data, f)
 
 
-def detect_match():
-
+def detect_matches():
     r = requests.get(URL)
     soup = BeautifulSoup(r.text,"html.parser")
-
     text = soup.get_text().lower()
+
+    detected = []
 
     for pair in WATCH_PAIRS:
         if pair[0] in text and pair[1] in text:
-            return pair
+            detected.append(pair)
 
-    return None
+    return detected  # devuelve lista de todas las parejas detectadas
 
 
 state = load_state()
-
-pair = detect_match()
-
+pairs = detect_matches()
 now = datetime.utcnow()
 
-if pair:
-
+for pair in pairs:
     pair_name = f"{pair[0]} / {pair[1]}"
 
     # Guardar siempre el partido detectado
     save_match(pair)
 
+    # Control de alertas por email
     if state.get("match_detected") != pair_name:
-
         state["match_detected"] = pair_name
         state["detect_time"] = now.isoformat()
         state["pre_alert"] = False
-
-        save_match(pair)
-
     else:
-
         detect_time = datetime.fromisoformat(state["detect_time"])
-
         if not state.get("pre_alert") and now - detect_time > timedelta(minutes=10):
-
-            send_email(
-                f"🎾 En breve empieza partido de {pair_name}"
-            )
-
+            send_email(f"🎾 En breve empieza partido de {pair_name}")
             state["pre_alert"] = True
 
-else:
-
-    if state.get("match_detected"):
-
-        send_email(
-            f"🏁 Ha terminado el partido de {state['match_detected']}"
-        )
-
-        state = {}
-
+# Enviar alerta de fin de partido si no se detecta ningún partido ahora
+if not pairs and state.get("match_detected"):
+    send_email(f"🏁 Ha terminado el partido de {state['match_detected']}")
+    state = {}
 
 save_state(state)
