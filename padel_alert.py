@@ -18,7 +18,7 @@ PASSWORD = os.environ["EMAIL_PASS"]
 DEST = os.environ["EMAIL_DEST"]
 
 STATE_FILE = "alert_state.json"
-MATCH_FILE = "matches.json"
+MATCH_FILE = "docs/matches.json"
 
 
 def send_email(message):
