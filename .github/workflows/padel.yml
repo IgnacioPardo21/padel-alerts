@@ -34,3 +34,11 @@ jobs:
           EMAIL_DEST: ${{ secrets.EMAIL_DEST }}
 
         run: python padel_alert.py
+
+      - name: guardar estado
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "actions@github.com"
+          git add match_state.json
+          git commit -m "update match state" || echo "no changes"
+          git push
