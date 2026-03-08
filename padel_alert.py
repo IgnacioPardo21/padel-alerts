@@ -51,24 +51,26 @@ def save_state(state):
 
 
 def save_match(pair):
+    today = datetime.utcnow().date().isoformat()
+    pair_name = f"{pair[0]} / {pair[1]}"
+
+    # Cargar archivo
     try:
         with open(MATCH_FILE) as f:
             data = json.load(f)
     except:
         data = []
 
-    pair_name = f"{pair[0]} / {pair[1]}"
-    today = datetime.utcnow().date().isoformat()
-
-    # Solo añadimos si no existe la pareja de hoy
+    # Comprobar si ya está registrado hoy
     if not any(d['pair'] == pair_name and d['date'] == today for d in data):
         data.append({
             "pair": pair_name,
             "date": today
         })
 
-    with open(MATCH_FILE,"w") as f:
-        json.dump(data,f)
+    # Guardar archivo actualizado
+    with open(MATCH_FILE, "w") as f:
+        json.dump(data, f)
 
 
 def detect_match():
