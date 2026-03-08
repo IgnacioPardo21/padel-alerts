@@ -51,7 +51,6 @@ def save_state(state):
 
 
 def save_match(pair):
-
     try:
         with open(MATCH_FILE) as f:
             data = json.load(f)
@@ -59,9 +58,14 @@ def save_match(pair):
         data = []
 
     pair_name = f"{pair[0]} / {pair[1]}"
+    today = datetime.utcnow().date().isoformat()
 
-    if pair_name not in data:
-        data.append(pair_name)
+    # Solo añadimos si no existe la pareja de hoy
+    if not any(d['pair'] == pair_name and d['date'] == today for d in data):
+        data.append({
+            "pair": pair_name,
+            "date": today
+        })
 
     with open(MATCH_FILE,"w") as f:
         json.dump(data,f)
