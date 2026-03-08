@@ -24,12 +24,16 @@ async function loadMatches() {
         const data = await response.json();
         const ul = document.getElementById('matches');
         ul.innerHTML = '';
-        if(data.length === 0) {
-            ul.innerHTML = '<li>No hay partidos detectados</li>';
+
+        const today = new Date().toISOString().slice(0,10);
+        const todayMatches = data.filter(d => d.date === today);
+
+        if(todayMatches.length === 0) {
+            ul.innerHTML = '<li>No hay partidos detectados hoy</li>';
         } else {
-            data.forEach(pair => {
+            todayMatches.forEach(d => {
                 const li = document.createElement('li');
-                li.textContent = pair;
+                li.textContent = d.pair;
                 ul.appendChild(li);
             });
         }
