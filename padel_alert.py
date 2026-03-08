@@ -102,7 +102,7 @@ for pair in pairs:
     else:
         detect_time = datetime.fromisoformat(state["detect_time"])
         if not state.get("pre_alert") and now - detect_time > timedelta(minutes=10):
-            send_email(f"🎾 En breve empieza partido de {pair_name}")
+            send_email(f"🎾 En breve empieza partido de la pareja {pair_name}")
             state["pre_alert"] = True
 
 # Enviar alerta de fin de partido si no se detecta ningún partido ahora
